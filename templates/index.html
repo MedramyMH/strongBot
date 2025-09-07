@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Trading Signals - Advanced Bot</title>
+    <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 ML Trading Bot</h1>
+            <p style="color: #888;">Machine Learning optimized signals • Trade history tracking • Asset selection</p>
+        </header>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label for="timeframe">Timeframe</label>
+                <select id="timeframe">
+                    <option value="1m" selected >1 Minute</option>
+                    <option value="5m">5 Minutes</option>
+                    <option value="15m">15 Minutes</option>
+                    <option value="1h">1 Hour</option>
+                    <option value="4h">4 Hours</option>
+                    <option value="1d">1 Day</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="confidence">Min Confidence</label>
+                <input type="number" id="confidence" value="65" min="65" max="98">
+            </div>
+            
+            <div class="control-group">
+                <label for="market">Market Type</label>
+                <select id="market">
+                    <option value="all">All Markets</option>
+                    <option value="forex">Forex</option>
+                    <option value="crypto">Crypto</option>
+                    <option value="stocks">Stocks</option>
+                    <option value="indices">Indices</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="refresh">Auto Refresh</label>
+                <select id="refresh">
+                    <option value="5">5 seconds</option>
+                    <option value="10" selected>10 seconds</option>
+                    <option value="15">15 seconds</option>
+                    <option value="30">30 seconds</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="filter">Signal Filter</label>
+                <select id="filter">
+                    <option value="all">All Signals</option>
+                    <option value="buy">Buy Only</option>
+                    <option value="sell">Sell Only</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button id="asset-selector-btn">Select Assets</button>
+            </div>
+        </div>
+        
+        <!-- Asset Selection Modal -->
+        <div id="asset-modal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h2>Select Assets to Monitor</h2>
+                <div class="asset-categories">
+                    <div class="asset-category">
+                        <h3>Forex</h3>
+                        <div class="asset-list">
+                            <label><input type="checkbox" value="EURUSD=X"> EUR/USD</label>
+                            <label><input type="checkbox" value="GBPUSD=X"> GBP/USD</label>
+                            <label><input type="checkbox" value="USDJPY=X"> USD/JPY</label>
+                            <label><input type="checkbox" value="AUDUSD=X"> AUD/USD</label>
+                            <label><input type="checkbox" value="USDCAD=X"> USD/CAD</label>
+                        </div>
+                    </div>
+                    <div class="asset-category">
+                        <h3>Crypto</h3>
+                        <div class="asset-list">
+                            <label><input type="checkbox" value="BTC-USD"> Bitcoin</label>
+                            <label><input type="checkbox" value="ETH-USD"> Ethereum</label>
+                            <label><input type="checkbox" value="BNB-USD"> Binance Coin</label>
+                            <label><input type="checkbox" value="XRP-USD"> Ripple</label>
+                            <label><input type="checkbox" value="ADA-USD"> Cardano</label>
+                        </div>
+                    </div>
+                    <div class="asset-category">
+                        <h3>Stocks</h3>
+                        <div class="asset-list">
+                            <label><input type="checkbox" value="AAPL"> Apple</label>
+                            <label><input type="checkbox" value="MSFT"> Microsoft</label>
+                            <label><input type="checkbox" value="GOOGL"> Google</label>
+                            <label><input type="checkbox" value="AMZN"> Amazon</label>
+                            <label><input type="checkbox" value="NVDA"> NVIDIA</label>
+                        </div>
+                    </div>
+                    <div class="asset-category">
+                        <h3>Indices</h3>
+                        <div class="asset-list">
+                            <label><input type="checkbox" value="^GSPC"> S&P 500</label>
+                            <label><input type="checkbox" value="^DJI"> Dow Jones</label>
+                            <label><input type="checkbox" value="^IXIC"> Nasdaq</label>
+                            <label><input type="checkbox" value="SPY"> SPDR S&P 500</label>
+                            <label><input type="checkbox" value="QQQ"> Invesco QQQ</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button id="select-all-btn">Select All</button>
+                    <button id="deselect-all-btn">Deselect All</button>
+                    <button id="save-assets-btn">Save Selection</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="signals" class="signals-grid">
+            <div class="loading">
+                <h3>🔄 Loading ML-Optimized Signals...</h3>
+                <p>Analyzing markets with machine learning enhanced strategies</p>
+            </div>
+        </div>
+        
+        <div class="ml-status">
+            <h3>🤖 ML Model Status</h3>
+            <div id="ml-status-content">Loading...</div>
+        </div>
+        
+        <div class="trade-history">
+            <h3>📊 Recent Trade History</h3>
+            <div id="trade-history-content">Loading...</div>
+        </div>
+    </div>
+    
+    <div class="status-indicator" id="status">🔌 Connecting...</div>
+
+    <!-- Add to your controls section -->
+    <div class="control-group">
+        <label for="ml-training">ML Training</label>
+        <select id="ml-training">
+            <option value="auto">Auto Train</option>
+            <option value="manual">Manual Train</option>
+        </select>
+    </div>
+
+    <div class="control-group">
+        <button id="train-now-btn">Train ML Now</button>
+    </div>
+
+    <!-- Add to your ML status section -->
+    <div class="ml-status">
+        <h3>🤖 ML Model Status</h3>
+        <div id="ml-status-content">Loading...</div>
+        <div id="ml-training-status">
+            <p>Training Data: <span id="training-data-count">0</span> trades with outcomes</p>
+            <p>Next Auto-Training: <span id="next-training">--</span></p>
+        </div>
+    </div>
+    <div class="timer">
+        <span class="timer-icon">⏱️</span>
+        <span id="timer-text">Next update: 10s</span>
+    </div>
+    
+    <script>
+        // Global variables
+        let refreshInterval = 10;
+        let countdown = refreshInterval;
+        let selectedAssets = [];
+        
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Initialize elements after DOM is loaded
+            const timeframeEl = document.getElementById('timeframe');
+            const confidenceEl = document.getElementById('confidence');
+            const marketEl = document.getElementById('market');
+            const refreshEl = document.getElementById('refresh');
+            const filterEl = document.getElementById('filter');
+            const statusEl = document.getElementById('status');
+            const timerTextEl = document.getElementById('timer-text');
+            const signalsEl = document.getElementById('signals');
+            const assetModal = document.getElementById('asset-modal');
+            const assetSelectorBtn = document.getElementById('asset-selector-btn');
+            const closeModal = document.querySelector('.close');
+            const selectAllBtn = document.getElementById('select-all-btn');
+            const deselectAllBtn = document.getElementById('deselect-all-btn');
+            const saveAssetsBtn = document.getElementById('save-assets-btn');
+            const mlStatusContent = document.getElementById('ml-status-content');
+            const tradeHistoryContent = document.getElementById('trade-history-content');
+            
+            // Check if all elements exist
+            if (!timeframeEl || !confidenceEl || !marketEl || !refreshEl || !filterEl) {
+                console.error('Some DOM elements are missing');
+                return;
+            }
+            
+            // Modal functionality
+            assetSelectorBtn.addEventListener('click', () => {
+                assetModal.style.display = 'block';
+            });
+            
+            closeModal.addEventListener('click', () => {
+                assetModal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', (event) => {
+                if (event.target === assetModal) {
+                    assetModal.style.display = 'none';
+                }
+            });
+            
+            selectAllBtn.addEventListener('click', () => {
+                document.querySelectorAll('.asset-list input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+            });
+            
+            deselectAllBtn.addEventListener('click', () => {
+                document.querySelectorAll('.asset-list input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            });
+            
+            saveAssetsBtn.addEventListener('click', () => {
+                selectedAssets = [];
+                document.querySelectorAll('.asset-list input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedAssets.push(checkbox.value);
+                });
+                
+                // Send selected assets to server
+                fetch('/api/select-assets', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ assets: selectedAssets }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Assets selected:', data);
+                    assetModal.style.display = 'none';
+                    loadSignals(); // Reload signals with new selection
+                })
+                .catch(error => {
+                    console.error('Error selecting assets:', error);
+                });
+            });
+            
+            function formatSignalCard(signal) {
+                const signalClass = signal.signal.toLowerCase();
+                const signalIcon = signalClass === 'buy' ? '🟢' : '🔴';
+                const confidenceValue = parseFloat(signal.confidence);
+                
+                return `
+                    <div class="signal-card ${signalClass}">
+                        <div class="signal-header">
+                            <div class="signal-icon">${signalIcon}</div>
+                            <div class="signal-info">
+                                <div class="signal-type">${signal.signal}</div>
+                                <div class="asset-name">${signal.asset}</div>
+                            </div>
+                        </div>
+                        <div class="signal-details">
+                            <div class="signal-detail">
+                                <span class="detail-label">Market</span>
+                                <span class="detail-value">${signal.market || 'N/A'}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Timeframe</span>
+                                <span class="detail-value">${signal.timeframe}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Contract</span>
+                                <span class="detail-value">${signal.contract_period}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Entry Zone</span>
+                                <span class="detail-value">${signal.entry_zone}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Target</span>
+                                <span class="detail-value">${signal.target}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Stop Loss</span>
+                                <span class="detail-value">${signal.stop_loss}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Risk:Reward</span>
+                                <span class="detail-value">${signal.risk_reward || '3.0:1'}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Strategy</span>
+                                <span class="detail-value">${signal.reasoning}</span>
+                            </div>
+                            <div class="signal-detail">
+                                <span class="detail-label">Time Left</span>
+                                <span class="detail-value">${signal.remaining_time}</span>
+                            </div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: ${confidenceValue}%"></div>
+                            </div>
+                            <div style="text-align: center; margin-top: 10px; font-weight: bold; color: #00ff88;">
+                                ${signal.confidence} Confidence
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function updateStatus(online = true, count = 0) {
+                if (statusEl) {
+                    if (online) {
+                        statusEl.className = 'status-indicator status-online';
+                        statusEl.textContent = `🟢 Online (${count} signals)`;
+                    } else {
+                        statusEl.className = 'status-indicator status-offline';
+                        statusEl.textContent = '🔴 Offline - Check Backend';
+                    }
+                }
+            }
+            
+            function loadMLStatus() {
+                fetch('/api/ml-status')
+                    .then(response => response.json())
+                    .then(data => {
+                        const statusText = data.is_trained ? 
+                            '🟢 Model Trained and Active' : 
+                            '🟡 Model Training (Needs more data)';
+                        
+                        mlStatusContent.innerHTML = `
+                            <p>${statusText}</p>
+                            <p>Training Data: ${data.training_data_path}</p>
+                            <p>Model: ${data.model_path}</p>
+                        `;
+                    })
+                    .catch(error => {
+                        mlStatusContent.innerHTML = `<p>Error loading ML status: ${error.message}</p>`;
+                    });
+            }
+            
+            function loadTradeHistory() {
+                fetch('/api/trade-history?limit=10')
+                    .then(response => response.json())
+                    .then(trades => {
+                        if (trades.length === 0) {
+                            tradeHistoryContent.innerHTML = '<p>No trade history yet</p>';
+                            return;
+                        }
+                        
+                        let html = '<table><tr><th>Symbol</th><th>Signal</th><th>Confidence</th><th>Outcome</th><th>Time</th></tr>';
+                        
+                        trades.slice().reverse().forEach(trade => {
+                            const outcomeClass = trade.outcome === 'WIN' ? 'outcome-win' : 
+                                              trade.outcome === 'LOSS' ? 'outcome-loss' : 'outcome-pending';
+                            const outcomeText = trade.outcome || 'Pending';
+                            
+                            html += `
+                                <tr>
+                                    <td>${formatSymbol(trade.symbol)}</td>
+                                    <td>${trade.signal_type}</td>
+                                    <td>${trade.confidence}%</td>
+                                    <td class="${outcomeClass}">${outcomeText}</td>
+                                    <td>${new Date(trade.timestamp).toLocaleTimeString()}</td>
+                                </tr>
+                            `;
+                        });
+                        
+                        html += '</table>';
+                        tradeHistoryContent.innerHTML = html;
+                    })
+                    .catch(error => {
+                        tradeHistoryContent.innerHTML = `<p>Error loading trade history: ${error.message}</p>`;
+                    });
+            }
+            
+            function loadSignals() {
+                const timeframe = timeframeEl.value;
+                const confidence = confidenceEl.value;
+                const filter = filterEl.value;
+                const market = marketEl.value;
+                
+                const url = `/api/signals?timeframe=${timeframe}&min_confidence=${confidence}&filter=${filter}&market=${market}`;
+                
+                console.log("Fetching signals from:", url);
+                
+                fetch(url)
+                    .then(response => {
+                        console.log("Response status:", response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(signals => {
+                        console.log(`Received ${signals.length} signals`);
+                        
+                        if (!signalsEl) return;
+                        
+                        signalsEl.innerHTML = '';
+                        updateStatus(true, signals.length);
+                        
+                        if (signals.length === 0) {
+                            signalsEl.innerHTML = `
+                                <div class="no-signals">
+                                    <h3>🎯 No High-Confidence Signals</h3>
+                                    <p>Current market conditions don't meet our criteria for ${timeframe} timeframe.</p>
+                                    <p>Try selecting a different timeframe or lowering the confidence threshold.</p>
+                                    <p style="color: #00ff88; margin-top: 15px;">✓ Quality over quantity - Only the best setups!</p>
+                                </div>
+                            `;
+                        } else {
+                            signals.forEach(signal => {
+                                signalsEl.innerHTML += formatSignalCard(signal);
+                            });
+                        }
+                        
+                        countdown = refreshInterval;
+                    })
+                    .catch(error => {
+                        console.error('Error loading signals:', error);
+                        updateStatus(false);
+                        if (signalsEl) {
+                            signalsEl.innerHTML = `
+                                <div class="no-signals">
+                                    <h3>🔌 Connection Error</h3>
+                                    <p><strong>Error:</strong> ${error.message}</p>
+                                    <p>Please ensure the Python backend is running on port 5000</p>
+                                    <p style="color: #888; margin-top: 15px; font-size: 12px;">
+                                        Run: <code>python app.py</code> in your terminal
+                                    </p>
+                                </div>
+                            `;
+                        }
+                    });
+            }
+            
+
+            function updateTimer() {
+                countdown--;
+                if (countdown <= 0) {
+                    loadSignals();
+                    loadMLStatus();
+                    loadTradeHistory();
+                    countdown = refreshInterval;// Reset here, not in loadSignals
+                }
+                if (timerTextEl) {
+                    timerTextEl.textContent = `Next update: ${countdown}s`;
+                }
+            }
+            // Set up the timer correctly
+            setInterval(updateTimer, 1000);
+            
+            // Event listeners
+            timeframeEl.addEventListener('change', loadSignals);
+            confidenceEl.addEventListener('change', loadSignals);
+            filterEl.addEventListener('change', loadSignals);
+            marketEl.addEventListener('change', loadSignals);
+            
+            refreshEl.addEventListener('change', (e) => {
+                refreshInterval = parseInt(e.target.value);
+                countdown = refreshInterval;
+            });
+            
+            // Initial load after a short delay
+            setTimeout(() => {
+                loadSignals();
+                loadMLStatus();
+                loadTradeHistory();
+                console.log('ML Trading Bot initialized');
+            }, 1000);
+            
+            // Health check
+            function checkHealth() {
+                fetch('/api/status')
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Bot status:', data);
+                    })
+                    .catch(error => {
+                        console.log('Health check failed:', error);
+                    });
+            }
+            
+            // Initial health check
+            setTimeout(checkHealth, 2000);
+            setInterval(checkHealth, 30000);
+            
+        }); // End of DOMContentLoaded
+        
+        function formatSymbol(symbol) {
+            if (symbol.endsWith("=X")) {
+                const base = symbol.replace("=X", "");
+                if (base.includes("USD")) {
+                    return base.replace("USD", "") + "/USD";
+                }
+                return base;
+            } else if (symbol.endsWith("-USD")) {
+                return symbol.replace("-USD", "/USD");
+            }
+            return symbol;
+        }
+
+        // ML Training functionality
+        const mlTrainingEl = document.getElementById('ml-training');
+        const trainNowBtn = document.getElementById('train-now-btn');
+
+        // Load ML status
+        function loadMLStatus() {
+            fetch('/api/ml-status')
+                .then(response => response.json())
+                .then(data => {
+                    const statusText = data.is_trained ? 
+                        '🟢 Model Trained and Active' : 
+                        '🟡 Model Training (Needs more data)';
+                    
+                    mlStatusContent.innerHTML = `
+                        <p>${statusText}</p>
+                        <p>Training Data: ${data.training_data_path}</p>
+                        <p>Model: ${data.model_path}</p>
+                    `;
+                })
+                .catch(error => {
+                    mlStatusContent.innerHTML = `<p>Error loading ML status: ${error.message}</p>`;
+                });
+            
+            // Load training data count
+            fetch('/api/trade-history?limit=200')
+                .then(response => response.json())
+                .then(trades => {
+                    const tradesWithOutcomes = trades.filter(t => t.outcome);
+                    document.getElementById('training-data-count').textContent = tradesWithOutcomes.length;
+                });
+        }
+
+        // Manual training button
+        trainNowBtn.addEventListener('click', () => {
+            trainNowBtn.disabled = true;
+            trainNowBtn.textContent = 'Training...';
+            
+            fetch('/api/train-ml', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message);
+                    loadMLStatus(); // Refresh status
+                })
+                .catch(error => {
+                    alert('Error training ML model: ' + error.message);
+                })
+                .finally(() => {
+                    trainNowBtn.disabled = false;
+                    trainNowBtn.textContent = 'Train ML Now';
+                });
+        });
+
+        // Update the timer function to also update next training time
+        function updateNextTrainingTime() {
+            const nextTraining = new Date();
+            nextTraining.setMinutes(nextTraining.getMinutes() + 5);
+            document.getElementById('next-training').textContent = nextTraining.toLocaleTimeString();
+        }
+
+        // Call this when the page loads
+        updateNextTrainingTime();
+        setInterval(updateNextTrainingTime, 60000); // Update every minute
+    </script>
+</body>
+</html>
